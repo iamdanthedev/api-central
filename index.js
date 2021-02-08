@@ -12,6 +12,7 @@ program
     .command("push <service> <schema>")
     .description("push a schema file to the api repository")
     .action(async (service, schema) => {
+        console.log ({ service, schema })
         const fullpath = resolve(schema);
         await push(service, fullpath);
         console.info("done");

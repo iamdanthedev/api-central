@@ -1,5 +1,4 @@
 module.exports = {
-    blobStorageName: "",
-    blobContainer: ""
-
+    blobStorageConnStr: process.env["API_CENTRAL_CONN"],
+    blobContainer: "api"
 }

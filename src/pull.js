@@ -1,20 +1,32 @@
 const { writeFileSync } = require("fs");
 const { BlobServiceClient } = require("@azure/storage-blob");
-const { AzureCliCredential } = require("@azure/identity");
-const { getBlobName, parseServicePath } = require("./utils");
+const { getBlobName, getCurrentBranch } = require("./utils");
 const config = require("../config");
 
-async function pull(servicePath, outFile, defaultBranch = "dev") {
-    const cred = new AzureCliCredential();
-    const client = new BlobServiceClient(`https://${config.blobStorageName}.blob.core.windows.net`, cred);
-
-    const { service, branch } = parseServicePath(servicePath, defaultBranch);
-
+async function pull(service, outFile) {
+    const client = BlobServiceClient.fromConnectionString(config.blobStorageConnStr);
+    const branch = await getCurrentBranch()
     const containerClient = client.getContainerClient(config.blobContainer);
-    const blobClient = containerClient.getBlobClient(getBlobName(service, branch));
 
-    const buf = await blobClient.downloadToBuffer();
-    writeFileSync(outFile, bug);
+    function download(b = branch) {
+        const blobClient = containerClient.getBlobClient(getBlobName(service, b));
+        return blobClient.downloadToBuffer();
+    }
+
+    let buf;
+
+    try {
+        buf = await download();
+        writeFileSync(outFile, buf);
+    } catch (err) {
+        if (err.statusCode !== 404) {
+            throw err;
+        }
+
+        buf = await download("dev");
+    }
+
+    writeFileSync(outFile, buf);
 }
 
 module.exports = { pull };
