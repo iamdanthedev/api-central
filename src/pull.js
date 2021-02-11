@@ -23,7 +23,15 @@ async function pull(service, outFile) {
             throw err;
         }
 
-        buf = await download("dev");
+        try {
+            buf = await download("dev");
+        } catch (err) {
+            if (err.statusCode !== 404) {
+                throw err;
+            }
+
+            buf = await download("master")
+        }
     }
 
     writeFileSync(outFile, buf);
